@@ -1,0 +1,50 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(ggplot2,quietly = TRUE)
+library(dtwclust)
+library(cluster)
+library(ggpubr)
+library(factoextra)
+library(progress)
+setwd("./Data/CSV")
+```
+```{r}
+nb_files = 877
+nb_grps = 15
+audio_files = list.files('./Data/CSV')
+```
+
+```{r}
+setwd("./Data/CSV")
+matrix <- matrix(0L, nrow = nb_files, ncol = nb_files)
+names = audio_files
+for (i in 1:length(names)) {
+  name = gsub(".csv","",names[i])
+  names[i]=name
+}
+rownames(matrix) = names
+colnames(matrix) = names
+
+pb <- progress_bar$new(total = nrow(matrix))
+for (i in 1:nb_files) {
+  time_serie_1 <- read.csv(audio_files[i])
+  pb$tick()
+  for (j in i:nb_files){
+    if (i == j) {
+      matrix[i,j] = 0
+    }
+    else { 
+      time_serie_2 <- read.csv(audio_files[j])
+      if (is.null(time_serie_2$values) == F){
+        matrix[j,i] = SBD(x=time_serie_1$values,y=time_serie_2$values,znorm=F,error.check = T)$dist
+        matrix[i,j] = matrix[j,i]
+      }
+    }
+  }
+}
+```
+
